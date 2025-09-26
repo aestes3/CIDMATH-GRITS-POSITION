@@ -1,0 +1,96 @@
+---
+title: "Vaccination Schedule and Timeline Creation Project"
+author: "Aidan Estes"
+date: "2025-03-27"
+output: 
+  html_document:
+    toc: true
+    theme:
+        bootswatch: lux
+---
+
+# Step 0 - Load Packages
+
+```{r}
+# Ensure that here() package is set to the proper directory 
+library(here)
+```
+
+```{r, warning=FALSE, message=FALSE}
+# Load other packages
+library(tidyverse)
+library(readxl)
+library(DT)
+library(knitr)
+library(httr)
+```
+
+# Step 1 - Load your vaccine event data
+
+Ex: (Dummy Data I created)
+
+```{r}
+load(here("data/DummyData.Rdata"))
+```
+
+# Step 2 - Load Driver Table Function
+
+This function loads a vaccine schedule for adults and children based of the recommended CDC guidelines for vaccines in 2024. The function will create expected range of vaccines that should be received for each patient ID based on the most recent vaccine event that occurred in the dataset. Displays results in a DT data table.
+
+## Example Command: 
+**driver_table(data, "id", "bday", "vax_date")**
+
+The user puts the name of the dataset in the first parameter. In this case it is called *data*. The next parameters specify columns of this dataset with *"id"* being the patient id column name, *"bday"* being the patient birthday column, and *"vax_date"* being the most recent vaccination date column. These are used to help with calculations in the function
+
+```{r}
+source(here("R/driver_table.R"))
+
+datatable(driver_table(data, "id", "bday", "vax_date"), class = 'cell-border stripe', options = list(
+    pageLength = 5,
+    lengthMenu = c(5,10,15,20),
+    autoWidth = TRUE,
+    searchable = TRUE
+))
+
+```
+
+# Step 3 - Load Vaccine Event Processing Function
+
+This function takes the previously run function the expected vaccines received and combines them to determine if those expected vaccines were actually received for each patient id. Displays results in a DT data table.
+
+## Example Command:
+**vaccine_event_processing(data, "id", "bday", "cvx", "between_vax_bday")**
+
+This command follows the same format of step 2 but includes some additional parameters to help with calculations. These include the column that includes the vaccine cvx codes, *"cvx"*, and the column that includes the amount of time between the patient birth and the date of vaccination, *"between_vax_bday"*. 
+
+
+```{r}
+source(here("R/vaccine_event_processing.R"))
+datatable(vaccine_event_processing(data,"id", "bday", "cvx", "between_vax_bday"), class = 'cell-border stripe', options = list(
+    pageLength = 5,
+    lengthMenu = c(5,10,15,20),
+    autoWidth = TRUE,
+    searchable = TRUE
+))
+
+```
+
+# Step 4 - Create Visual Timeline of Vaccine Schedule
+
+This should create a visual timeline of the CDC recommended vaccines based off of the driver table vaccine schedule. Combines all previous steps to have a visual representation of the data on a timeline with a key to explain the elements.
+
+## Example Command:
+**plot_vaccine_timeline("1")**
+
+This command follows a bit of a different format where the only requirement is the patient id that you wish to display on the timeline. In this example, the patient with id *"1"* will be displayed. 
+
+**USE STEP 3 DATA ONLY!!**
+---
+
+```{r, warning=FALSE, message=FALSE}
+#Load driver table dataset
+load(here("data/vaccine_event_processed.Rdata"))
+#Source function
+source(here("R/Timeline.R"))
+plot_vaccine_timeline("1")
+```
